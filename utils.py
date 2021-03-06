@@ -25,9 +25,9 @@ def data_decompose(fpath, save_dir='./dataset_sample'):
 
 if __name__ == '__main__':
     #fpath = './dataset/1-dust_labeled_spaces_img.npy'
-    root_pat = '/var/datasets/ParticleDatasetFSR/ParticleDatasetFSR'
-    save_dir = '/var/datasets/ParticleDatasetFSR/PDFSR_sample'
-    fpath_list = glob.glob('./dataset/*_img.npy')
+    root_path = '/var/datasets/ParticleDatasetFSR/ParticleDatasetFSR/'
+    save_dir = '/var/datasets/ParticleDatasetFSR/PDFSR_sample/'
+    fpath_list = glob.glob(root_path+'*img.npy')
 
     for fpath in fpath_list:
         fpath= fpath.replace('\\', '/')
