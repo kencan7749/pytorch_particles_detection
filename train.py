@@ -23,11 +23,11 @@ feat = "dual"
 
 train_indices = [1, 2, 3, 6, 8, 10, 11, 13, 16]
 test_indices = [7,18]
-train_indices = [1, 2]
-test_indices = [1,2]
+#train_indices = [0, 1]
+#test_indices = [0,1]
 
-train_data_path= sum([glob.glob(root_dir+ f"/{i}*.npy") for i in train_indices], [])
-test_data_path= sum([glob.glob(root_dir+ f"/{i}*.npy") for i in test_indices], [])
+train_data_path= sum([glob.glob(root_dir+ f"/{i+1}*.npy") for i in train_indices], [])
+test_data_path= sum([glob.glob(root_dir+ f"/{i+1}*.npy") for i in test_indices], [])
 
 trans_train = CloudStorTransformer()
 trans_valid = CloudStorTransformer(probability=0.0)
@@ -44,15 +44,10 @@ valid_data_loader = torch.utils.data.DataLoader(
 
 print(torch.cuda.is_available())
 model = LitUNet()
-#Gpu利用のためにdevice定義
-#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-#GPUに載せる
-#model = model.to(device)
-
 logger = loggers.TensorBoardLogger('logs/')
 
 checkpointing = pl.callbacks.ModelCheckpoint(monitor='val_loss')
-trainer = pl.Trainer(gpus=1,logger=logger)
+trainer = pl.Trainer(gpus=1,logger=logger,max_epochs=100)
 
 trainer.fit(model, train_data_loader, valid_data_loader)
 

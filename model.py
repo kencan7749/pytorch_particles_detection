@@ -4,7 +4,7 @@ from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
-from losses import DiceLoss
+from losses import DiceLoss, F1_Loss
 import pytorch_lightning as pl
        
 
@@ -68,6 +68,7 @@ class LitUNet(pl.LightningModule):
 
 
         self.dice_loss = DiceLoss()
+        self.f1_loss = F1_Loss()
 
     def forward(self, x):
         enc1 = self.conv1(x)
@@ -122,17 +123,23 @@ class LitUNet(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
+        batch_size = x.shape[0]
         y_out = self.forward(x)
-        y_pred = F.softmax(y_out)
+        y_pred = F.softmax(y_out, dim=1)
 
         #Calculate loss
         bce_loss = F.binary_cross_entropy(y_pred, y)
         dice_loss = self.dice_loss(y_pred, y)
         loss = bce_loss + dice_loss
 
-        self.log('val_loss', loss, prog_bar=True, logger=True, on_step=False, on_epoch=True)
+        y_pred_label =torch.argmax(y,1)
+        y_label = torch.argmax(y,1 )
+        f1_loss = self.f1_loss(y_pred_label.view(batch_size, -1), y_label.view(batch_size, -1))
+
+        self.log('val_loss', loss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
         self.log('val_bce_loss', bce_loss,prog_bar=False, logger=True, on_step=False, on_epoch=True)
         self.log('val_dice_loss', dice_loss,prog_bar=False, logger=True, on_step=False, on_epoch=True)
+        self.log('val_f1_loss', f1_loss,prog_bar=True, logger=True, on_step=True, on_epoch=True)
 
     def validation_end(self, outputs):
          # Optional
