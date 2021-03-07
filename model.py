@@ -110,15 +110,36 @@ class LitUNet(pl.LightningModule):
         y_pred = F.softmax(y_out)
 
         #Calculate loss
-        bce_loss = F.binary_cross_entropy(y, y_pred)
+        bce_loss = F.binary_cross_entropy(y_pred, y)
         dice_loss = self.dice_loss(y_pred, y)
         loss = bce_loss + dice_loss
 
-        self.log('training_loss', loss)
-        self.log('bce_loss', bce_loss)
-        self.log('dice_loss', dice_loss)
+        self.log('training_loss', loss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
+        self.log('bce_loss', bce_loss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
+        self.log('dice_loss', dice_loss,prog_bar=True, logger=True, on_step=True, on_epoch=True)
 
         return loss
+
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+        y_out = self.forward(x)
+        y_pred = F.softmax(y_out)
+
+        #Calculate loss
+        bce_loss = F.binary_cross_entropy(y_pred, y)
+        dice_loss = self.dice_loss(y_pred, y)
+        loss = bce_loss + dice_loss
+
+        self.log('val_loss', loss, prog_bar=True, logger=True, on_step=False, on_epoch=True)
+        self.log('val_bce_loss', bce_loss,prog_bar=False, logger=True, on_step=False, on_epoch=True)
+        self.log('val_dice_loss', dice_loss,prog_bar=False, logger=True, on_step=False, on_epoch=True)
+
+    def validation_end(self, outputs):
+         # Optional
+         avg_loss = torch.stack(x['val_loss'] for x in outputs).mean()
+         tensorboard_logs = {'val_loss': avg_loss}
+         return {'avg_val_loss': avg_loss, 'log': tensorboard_logs}
+        
 
 
 
